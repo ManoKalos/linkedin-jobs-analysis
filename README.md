@@ -26,7 +26,8 @@ Application Streamlit pour visualiser les tendances des offres d'emploi LinkedIn
    ```bash
    pip install -r requirements.txt
    ```
-
+4. Exécutez warehouse_setup.sql dans un worksheet snowflake
+   
 ## Exécution Locale
 
 1. Lancez l'application :
