@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import os
 
-# Configuration de la page
+# Configuration de la page (doit être la première commande Streamlit)
 st.set_page_config(page_title="Analyse des Emplois LinkedIn", layout="wide")
 st.title("Analyse du Marché de l'Emploi LinkedIn")
 st.markdown("Découvrez les tendances des offres d'emploi par industrie, taille d'entreprise, type de présence et type d'emploi.")
@@ -56,28 +56,27 @@ def recuperer_donnees(query):
     return df
 
 # --------------------------------------------------------------------
-# Q1 : Top 10 des Industries par Offres d'Emploi
-st.header("Top 10 des Industries par Offres d'Emploi")
-requete_industries = "SELECT industry_name, job_count FROM top_jobs_by_industry ORDER BY job_count DESC LIMIT 10"
+# Q1 : Top 10 des Jobs par Industrie
+st.header("Top 10 des Jobs par Industrie")
+requete_top_jobs = "SELECT 'top_jobs_by_industry' AS table_name, industry_name, job_count FROM top_jobs_by_industry LIMIT 10"
 try:
-    df_industries = recuperer_donnees(requete_industries)
-    if df_industries.empty:
-        st.warning("Aucune donnée pour les industries. Vérifiez la table top_jobs_by_industry.")
+    df_top_jobs = recuperer_donnees(requete_top_jobs)
+    if df_top_jobs.empty:
+        st.warning("Aucune donnée dans la table top_jobs_by_industry.")
     else:
-        fig_industries = px.bar(
-            df_industries,
+        fig_top_jobs = px.bar(
+            df_top_jobs,
             x="industry_name",
             y="job_count",
-            title="Top 10 des Industries",
+            title="Top 10 des Jobs par Industrie",
             labels={"industry_name": "Industrie", "job_count": "Nombre d'Offres"},
             color="job_count",
             color_continuous_scale="Blues"
         )
-        fig_industries.update_layout(xaxis_tickangle=45, showlegend=False)
-        st.plotly_chart(fig_industries, use_container_width=True)
-        st.write(f"Industrie principale : {df_industries.iloc[0]['industry_name']} avec {df_industries.iloc[0]['job_count']} offres.")
+        fig_top_jobs.update_layout(xaxis_tickangle=45, showlegend=False)
+        st.plotly_chart(fig_top_jobs, use_container_width=True)
 except Exception as e:
-    st.error(f"Erreur lors de la récupération des industries : {str(e)}")
+    st.error(f"Erreur lors de la récupération des données : {str(e)}")
 
 # --------------------------------------------------------------------
 # Q2 : Répartition par Taille d'Entreprise
