@@ -1,68 +1,90 @@
-# Analyse des Emplois LinkedIn
-
+Analyse des Emplois LinkedIn
 Application Streamlit pour visualiser les tendances des offres d'emploi LinkedIn par industrie, taille d'entreprise, type de présence et type d'emploi. Cette application s'exécute localement et se connecte à une base Snowflake.
+Prérequis
 
-## Prérequis
+Python 3.8+
+Compte Snowflake avec accès à la base LINKEDIN (schéma PUBLIC)
+Les tables Snowflake suivantes doivent être remplies : top_jobs_by_industry, jobs_by_company_size, jobs_by_presence, jobs_by_employment_type
 
-- Python 3.8+
-- Compte Snowflake avec accès à la base `LINKEDIN` (schéma `PUBLIC`)
-- Les tables Snowflake suivantes doivent être remplies : `top_jobs_by_industry`, `jobs_by_company_size`, `jobs_by_presence`, `jobs_by_employment_type`
+Installation
 
-## Installation
+Cloner le dépôt :
+git clone https://github.com/ManoKalos/linkedin-jobs-analysis.git
+cd linkedin-jobs-analysis
 
-1. **Cloner le dépôt** :
-   ```bash
-   git clone https://github.com/ManoKalos/linkedin-jobs-analysis.git
-   cd linkedin-jobs-analysis
-   ```
 
-2. **Créer un environnement virtuel** :
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Windows : venv\Scripts\activate
-   ```
+Créer un environnement virtuel :
+python -m venv venv
+source venv/bin/activate  # Windows : venv\Scripts\activate
 
-3. **Installer les dépendances** :
-   ```bash
-   pip install -r requirements.txt
-   ```
 
-4. **Configurer les identifiants Snowflake** :
-   - Copiez le modèle de configuration :
-     ```bash
-     cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-     ```
-   - Éditez `.streamlit/secrets.toml` avec vos identifiants Snowflake :
-     ```toml
-     [snowflake]
-     user = "votre_utilisateur_snowflake"
-     password = "votre_mot_de_passe_snowflake"
-     account = "votre_identifiant_de_compte_snowflake"
-     warehouse = "votre_nom_d_entrepot"
-     ```
+Installer les dépendances :
+pip install -r requirements.txt
 
-## Exécution Locale
+
+
+Exécution Locale
 
 Lancez l'application :
-```bash
-streamlit run visualizer.py
-```
+streamlit run visualiser.py
 
-Ouvrez votre navigateur à l'adresse `http://localhost:8501`.
 
-## Structure du Projet
+Ouvrez votre navigateur à l'adresse http://localhost:8501.
 
-- `app.py` : Application Streamlit principale affichant quatre graphiques.
-- `requirements.txt` : Dépendances Python (Streamlit, Snowflake, Pandas, Plotly).
-- `.gitignore` : Exclut les fichiers sensibles comme `.streamlit/secrets.toml`.
-- `.streamlit/secrets.toml.example` : Modèle pour configurer les identifiants Snowflake.
-- `README.md` : Ce fichier, expliquant comment installer et exécuter l'application.
+Saisissez vos identifiants Snowflake dans la barre latérale de l'application :
 
-## Dépannage
+Utilisateur
+Mot de passe
+Compte
+Entrepôt
 
-- **Graphiques vides** : Vérifiez les tables Snowflake (`top_jobs_by_industry`, etc.) avec :
-  ```sql
-  SELECT * FROM LINKEDIN.PUBLIC.top_jobs_by_industry;
-  ```
-- **Erreur de connexion** : Assurez-vous que `.streamlit/secrets.toml` est correctement configuré.
-- **Contact** : Ouvrez une issue sur GitHub pour obtenir de l'aide.
+
+
+Structure du Projet
+
+visualiser.py : Application Streamlit principale affichant quatre graphiques.
+requirements.txt : Dépendances Python (Streamlit, Snowflake, Pandas, Plotly).
+.gitignore : Exclut les fichiers sensibles comme les environnements virtuels.
+README.md : Ce fichier, expliquant comment installer et exécuter l'application.
+
+Dépannage
+
+Graphiques vides :
+
+Connectez-vous à Snowflake et vérifiez les tables :SELECT * FROM LINKEDIN.PUBLIC.top_jobs_by_industry LIMIT 10;
+SELECT * FROM LINKEDIN.PUBLIC.jobs_by_company_size LIMIT 10;
+SELECT * FROM LINKEDIN.PUBLIC.jobs_by_presence LIMIT 10;
+SELECT * FROM LINKEDIN.PUBLIC.jobs_by_employment_type LIMIT 10;
+
+
+Si les tables sont vides, assurez-vous que le script Snowflake a été exécuté correctement.
+
+
+Erreur de connexion Snowflake :
+
+Vérifiez que les identifiants saisis dans l'interface sont corrects.
+Testez la connexion manuellement :import snowflake.connector
+conn = snowflake.connector.connect(
+    user="votre_utilisateur",
+    password="votre_mot_de_passe",
+    account="votre_compte",
+    warehouse="votre_entrepot",
+    database="LINKEDIN",
+    schema="PUBLIC"
+)
+print(conn.cursor().execute("SELECT CURRENT_VERSION()").fetchone())
+
+
+
+
+Autres problèmes :
+
+Contactez le propriétaire du dépôt via une issue GitHub ou vérifiez les logs dans la console.
+
+
+
+Sécurité
+
+Les identifiants Snowflake sont saisis directement dans l'interface Streamlit et ne sont pas stockés sur le disque.
+Assurez-vous de ne pas partager vos identifiants dans des environnements non sécurisés.
+
