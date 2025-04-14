@@ -2,17 +2,29 @@ import streamlit as st
 import snowflake.connector
 import plotly.express as px
 import pandas as pd
+import os
 
 # Configuration de la page
 st.set_page_config(page_title="Analyse des Emplois LinkedIn", layout="wide")
 st.title("Analyse du Marché de l'Emploi LinkedIn")
 st.markdown("Découvrez les tendances des offres d'emploi par industrie, taille d'entreprise, type de présence et type d'emploi.")
 
-# Vérification des secrets Snowflake
+# Vérification du fichier secrets.toml
+secrets_path = os.path.join(".streamlit", "secrets.toml")
+if not os.path.exists(secrets_path):
+    st.error("Erreur : Le fichier .streamlit/secrets.toml est manquant. Copiez .streamlit/secrets.toml.example et remplissez vos identifiants Snowflake.")
+    st.stop()
+
+# Vérification des clés Snowflake dans secrets
 try:
     snowflake_config = st.secrets["snowflake"]
+    required_keys = ["user", "password", "account", "warehouse"]
+    for key in required_keys:
+        if key not in snowflake_config:
+            st.error(f"Erreur : La clé '{key}' est manquante dans .streamlit/secrets.toml.")
+            st.stop()
 except KeyError:
-    st.error("Erreur : Veuillez configurer vos identifiants Snowflake dans .streamlit/secrets.toml. Voir .streamlit/secrets.toml.example.")
+    st.error("Erreur : La section [snowflake] est manquante dans .streamlit/secrets.toml. Vérifiez le fichier.")
     st.stop()
 
 # Connexion à Snowflake
