@@ -1,33 +1,34 @@
 # Analyse des Emplois LinkedIn
 
-Application Streamlit pour visualiser les tendances des offres d'emploi LinkedIn par industrie, taille d'entreprise, type de présence et type d'emploi.
+Application Streamlit pour visualiser les tendances des offres d'emploi LinkedIn par industrie, taille d'entreprise, type de présence et type d'emploi. Cette application s'exécute localement et se connecte à une base Snowflake.
 
 ## Prérequis
 
 - Python 3.8+
-- Compte Snowflake avec accès à la base `LINKEDIN`
+- Compte Snowflake avec accès à la base `LINKEDIN` (schéma `PUBLIC`)
+- Les tables Snowflake suivantes doivent être remplies : `top_jobs_by_industry`, `jobs_by_company_size`, `jobs_by_presence`, `jobs_by_employment_type`
 
 ## Installation
 
-1. Clonez ce dépôt :
+1. **Cloner le dépôt** :
    ```bash
-   git clone https://github.com/votre_utilisateur/linkedin-job-analysis.git
-   cd linkedin-job-analysis
+   git clone https://github.com/ManoKalos/linkedin-jobs-analysis.git
+   cd linkedin-jobs-analysis
    ```
 
-2. Créez un environnement virtuel :
+2. **Créer un environnement virtuel** :
    ```bash
    python -m venv venv
    source venv/bin/activate  # Windows : venv\Scripts\activate
    ```
 
-3. Installez les dépendances :
+3. **Installer les dépendances** :
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Configurez vos identifiants Snowflake :
-   - Copiez `.streamlit/secrets.toml.example` vers `.streamlit/secrets.toml` :
+4. **Configurer les identifiants Snowflake** :
+   - Copiez le modèle de configuration :
      ```bash
      cp .streamlit/secrets.toml.example .streamlit/secrets.toml
      ```
@@ -47,30 +48,15 @@ Lancez l'application :
 streamlit run app.py
 ```
 
-Ouvrez `http://localhost:8501` dans votre navigateur.
-
-## Déploiement sur Streamlit Cloud
-
-1. Poussez le dépôt sur GitHub.
-2. Connectez-vous à [Streamlit Cloud](https://streamlit.io/cloud).
-3. Créez une nouvelle application et liez-la à ce dépôt.
-4. Ajoutez les secrets Snowflake dans les paramètres de l'application :
-   - Allez dans `Settings > Secrets`.
-   - Ajoutez :
-     ```toml
-     [snowflake]
-     user = "votre_utilisateur_snowflake"
-     password = "votre_mot_de_passe_snowflake"
-     account = "votre_identifiant_de_compte_snowflake"
-     warehouse = "votre_nom_d_entrepot"
-     ```
+Ouvrez votre navigateur à l'adresse `http://localhost:8501`.
 
 ## Structure du Projet
 
-- `app.py` : Application Streamlit principale.
-- `requirements.txt` : Dépendances Python.
-- `.streamlit/secrets.toml.example` : Modèle pour les identifiants Snowflake.
-- `.gitignore` : Exclut les fichiers sensibles.
+- `app.py` : Application Streamlit principale affichant quatre graphiques.
+- `requirements.txt` : Dépendances Python (Streamlit, Snowflake, Pandas, Plotly).
+- `.gitignore` : Exclut les fichiers sensibles comme `.streamlit/secrets.toml`.
+- `.streamlit/secrets.toml.example` : Modèle pour configurer les identifiants Snowflake.
+- `README.md` : Ce fichier, expliquant comment installer et exécuter l'application.
 
 ## Dépannage
 
