@@ -2,41 +2,34 @@ import streamlit as st
 import snowflake.connector
 import plotly.express as px
 import pandas as pd
-import os
 
 # Configuration de la page
 st.set_page_config(page_title="Analyse des Emplois LinkedIn", layout="wide")
 st.title("Analyse du Marché de l'Emploi LinkedIn")
 st.markdown("Découvrez les tendances des offres d'emploi par industrie, taille d'entreprise, type de présence et type d'emploi.")
 
-# Vérification du fichier secrets.toml
-secrets_path = os.path.join(".streamlit", "secrets.toml")
-if not os.path.exists(secrets_path):
-    st.error("Erreur : Le fichier .streamlit/secrets.toml est manquant. Copiez .streamlit/secrets.toml.example et remplissez vos identifiants Snowflake.")
-    st.stop()
+# Saisie des identifiants Snowflake
+st.sidebar.header("Identifiants Snowflake")
+user = st.sidebar.text_input("Utilisateur", placeholder="votre_utilisateur_snowflake")
+password = st.sidebar.text_input("Mot de passe", type="password", placeholder="votre_mot_de_passe_snowflake")
+account = st.sidebar.text_input("Compte", placeholder="votre_identifiant_de_compte_snowflake")
+warehouse = st.sidebar.text_input("Entrepôt", placeholder="votre_nom_d_entrepot")
 
-# Vérification des clés Snowflake dans secrets
-try:
-    snowflake_config = st.secrets["snowflake"]
-    required_keys = ["user", "password", "account", "warehouse"]
-    for key in required_keys:
-        if key not in snowflake_config:
-            st.error(f"Erreur : La clé '{key}' est manquante dans .streamlit/secrets.toml.")
-            st.stop()
-except KeyError:
-    st.error("Erreur : La section [snowflake] est manquante dans .streamlit/secrets.toml. Vérifiez le fichier.")
+# Vérification des identifiants
+if not all([user, password, account, warehouse]):
+    st.warning("Veuillez remplir tous les champs d'identifiants Snowflake dans la barre latérale.")
     st.stop()
 
 # Connexion à Snowflake
 @st.cache_resource
-def connexion_snowflake():
+def connexion_snowflake(_user, _password, _account, _warehouse):
     """Établit une connexion sécurisée à Snowflake."""
     try:
         conn = snowflake.connector.connect(
-            user=snowflake_config["user"],
-            password=snowflake_config["password"],
-            account=snowflake_config["account"],
-            warehouse=snowflake_config["warehouse"],
+            user=_user,
+            password=_password,
+            account=_account,
+            warehouse=_warehouse,
             database="LINKEDIN",
             schema="PUBLIC"
         )
@@ -47,9 +40,9 @@ def connexion_snowflake():
 
 # Récupération des données
 @st.cache_data
-def recuperer_donnees(query):
+def recuperer_donnees(query, _user, _password, _account, _warehouse):
     """Exécute une requête SQL et retourne un DataFrame."""
-    conn = connexion_snowflake()
+    conn = connexion_snowflake(_user, _password, _account, _warehouse)
     df = pd.read_sql(query, conn)
     conn.close()
     return df
@@ -58,7 +51,7 @@ def recuperer_donnees(query):
 st.header("Top 10 des Industries par Offres d'Emploi")
 requete_industries = "SELECT industry_name, job_count FROM top_jobs_by_industry ORDER BY job_count DESC LIMIT 10"
 try:
-    df_industries = recuperer_donnees(requete_industries)
+    df_industries = recuperer_donnees(requete_industries, user, password, account, warehouse)
     if df_industries.empty:
         st.warning("Aucune donnée pour les industries. Vérifiez la table top_jobs_by_industry.")
     else:
@@ -81,7 +74,7 @@ except Exception as e:
 st.header("Répartition des Offres par Taille d'Entreprise")
 requete_taille = "SELECT company_size, job_count FROM jobs_by_company_size WHERE company_size != -1 ORDER BY company_size"
 try:
-    df_taille = recuperer_donnees(requete_taille)
+    df_taille = recuperer_donnees(requete_taille, user, password, account, warehouse)
     if df_taille.empty:
         st.warning("Aucune donnée pour les tailles d'entreprise. Vérifiez la table jobs_by_company_size.")
     else:
@@ -102,7 +95,7 @@ except Exception as e:
 st.header("Répartition des Offres par Type de Présence")
 requete_presence = "SELECT work_type, job_count FROM jobs_by_presence WHERE work_type IN ('Remote', 'On-site', 'Hybrid')"
 try:
-    df_presence = recuperer_donnees(requete_presence)
+    df_presence = recuperer_donnees(requete_presence, user, password, account, warehouse)
     if df_presence.empty:
         st.warning("Aucune donnée pour les types de présence. Vérifiez la table jobs_by_presence.")
     else:
@@ -124,7 +117,7 @@ except Exception as e:
 st.header("Répartition des Offres par Type d'Emploi")
 requete_emploi = "SELECT employment_type, job_count FROM jobs_by_employment_type WHERE employment_type IN ('Full-time', 'Part-time', 'Internship')"
 try:
-    df_emploi = recuperer_donnees(requete_emploi)
+    df_emploi = recuperer_donnees(requete_emploi, user, password, account, warehouse)
     if df_emploi.empty:
         st.warning("Aucune donnée pour les types d'emploi. Vérifiez la table jobs_by_employment_type.")
     else:
