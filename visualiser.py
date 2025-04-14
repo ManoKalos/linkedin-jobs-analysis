@@ -1,57 +1,66 @@
 import streamlit as st
 import snowflake.connector
-import plotly.express as px
 import pandas as pd
+import plotly.express as px
+import os
 
 # Configuration de la page
 st.set_page_config(page_title="Analyse des Emplois LinkedIn", layout="wide")
 st.title("Analyse du Marché de l'Emploi LinkedIn")
 st.markdown("Découvrez les tendances des offres d'emploi par industrie, taille d'entreprise, type de présence et type d'emploi.")
 
-# Saisie des identifiants Snowflake
+# --------------------------------------------------------------------
 st.sidebar.header("Identifiants Snowflake")
 user = st.sidebar.text_input("Utilisateur", placeholder="votre_utilisateur_snowflake")
 password = st.sidebar.text_input("Mot de passe", type="password", placeholder="votre_mot_de_passe_snowflake")
 account = st.sidebar.text_input("Compte", placeholder="votre_identifiant_de_compte_snowflake")
-warehouse = st.sidebar.text_input("Entrepôt", placeholder="votre_nom_d_entrepot")
+warehouse = st.sidebar.text_input("Entrepôt", placeholder="votre_nom_d'entrepot")
 
-# Vérification des identifiants
 if not all([user, password, account, warehouse]):
-    st.warning("Veuillez remplir tous les champs d'identifiants Snowflake dans la barre latérale.")
+    st.warning("Veuillez remplir tous les champs d'identifiants Snowflake dans la barre latérale ou configurer le fichier secrets.toml.")
     st.stop()
 
+# --------------------------------------------------------------------
 # Connexion à Snowflake
 @st.cache_resource
-def connexion_snowflake(_user, _password, _account, _warehouse):
-    """Établit une connexion sécurisée à Snowflake."""
+def connexion_snowflake():
+    """Établit une connexion sécurisée à Snowflake et sélectionne l'entrepôt."""
     try:
         conn = snowflake.connector.connect(
-            user=_user,
-            password=_password,
-            account=_account,
-            warehouse=_warehouse,
+            user=user,
+            password=password,
+            account=account,
+            warehouse=warehouse,
             database="LINKEDIN",
             schema="PUBLIC"
         )
+        # Sélectionner explicitement l'entrepôt
+        conn.cursor().execute(f"USE WAREHOUSE {warehouse}")
         return conn
     except Exception as e:
         st.error(f"Erreur de connexion à Snowflake : {str(e)}")
         st.stop()
 
-# Récupération des données
+# --------------------------------------------------------------------
+# Fonction de récupération des données
 @st.cache_data
-def recuperer_donnees(query, _user, _password, _account, _warehouse):
-    """Exécute une requête SQL et retourne un DataFrame."""
-    conn = connexion_snowflake(_user, _password, _account, _warehouse)
+def recuperer_donnees(query):
+    """
+    Exécute une requête SQL et retourne un DataFrame.
+    Note : On ne ferme pas la connexion ici, car elle est mise en cache.
+    """
+    conn = connexion_snowflake()
     df = pd.read_sql(query, conn)
-    conn.close()
+    # Convertir les noms de colonnes en minuscules pour faciliter le traitement
+    df.columns = df.columns.str.lower()
     return df
 
-# Q1 : Top 10 des industries
+# --------------------------------------------------------------------
+# Q1 : Top 10 des Industries par Offres d'Emploi
 st.header("Top 10 des Industries par Offres d'Emploi")
 requete_industries = "SELECT industry_name, job_count FROM top_jobs_by_industry ORDER BY job_count DESC LIMIT 10"
 try:
-    df_industries = recuperer_donnees(requete_industries, user, password, account, warehouse)
+    df_industries = recuperer_donnees(requete_industries)
     if df_industries.empty:
         st.warning("Aucune donnée pour les industries. Vérifiez la table top_jobs_by_industry.")
     else:
@@ -70,11 +79,12 @@ try:
 except Exception as e:
     st.error(f"Erreur lors de la récupération des industries : {str(e)}")
 
-# Q2 : Répartition par taille d'entreprise
+# --------------------------------------------------------------------
+# Q2 : Répartition par Taille d'Entreprise
 st.header("Répartition des Offres par Taille d'Entreprise")
 requete_taille = "SELECT company_size, job_count FROM jobs_by_company_size WHERE company_size != -1 ORDER BY company_size"
 try:
-    df_taille = recuperer_donnees(requete_taille, user, password, account, warehouse)
+    df_taille = recuperer_donnees(requete_taille)
     if df_taille.empty:
         st.warning("Aucune donnée pour les tailles d'entreprise. Vérifiez la table jobs_by_company_size.")
     else:
@@ -91,11 +101,12 @@ try:
 except Exception as e:
     st.error(f"Erreur lors de la récupération des tailles d'entreprise : {str(e)}")
 
-# Q3 : Répartition par type de présence
+# --------------------------------------------------------------------
+# Q3 : Répartition par Type de Présence
 st.header("Répartition des Offres par Type de Présence")
 requete_presence = "SELECT work_type, job_count FROM jobs_by_presence WHERE work_type IN ('Remote', 'On-site', 'Hybrid')"
 try:
-    df_presence = recuperer_donnees(requete_presence, user, password, account, warehouse)
+    df_presence = recuperer_donnees(requete_presence)
     if df_presence.empty:
         st.warning("Aucune donnée pour les types de présence. Vérifiez la table jobs_by_presence.")
     else:
@@ -113,11 +124,12 @@ try:
 except Exception as e:
     st.error(f"Erreur lors de la récupération des types de présence : {str(e)}")
 
-# Q4 : Répartition par type d'emploi
+# --------------------------------------------------------------------
+# Q4 : Répartition par Type d'Emploi
 st.header("Répartition des Offres par Type d'Emploi")
 requete_emploi = "SELECT employment_type, job_count FROM jobs_by_employment_type WHERE employment_type IN ('Full-time', 'Part-time', 'Internship')"
 try:
-    df_emploi = recuperer_donnees(requete_emploi, user, password, account, warehouse)
+    df_emploi = recuperer_donnees(requete_emploi)
     if df_emploi.empty:
         st.warning("Aucune donnée pour les types d'emploi. Vérifiez la table jobs_by_employment_type.")
     else:
