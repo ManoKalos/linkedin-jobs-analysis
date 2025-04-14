@@ -45,7 +45,7 @@ Application Streamlit pour visualiser les tendances des offres d'emploi LinkedIn
 
 Lancez l'application :
 ```bash
-streamlit run app.py
+streamlit run visualizer.py
 ```
 
 Ouvrez votre navigateur à l'adresse `http://localhost:8501`.
